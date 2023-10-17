@@ -25,9 +25,9 @@ class TestRoutes(TestCase):
                 'users:signup',
         ):
             with self.subTest(name=name):
-                url = reverse(name)
-                response = self.client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertEqual(
+                    self.client.get(reverse(name)).status_code, HTTPStatus.OK
+                )
 
     def test_availability_for_detail_edit_and_delete(self):
         users_statuses = (
@@ -42,12 +42,14 @@ class TestRoutes(TestCase):
                     'notes:delete',
             ):
                 with self.subTest(user=user, name=name):
-                    url = reverse(name, args=(self.note.slug,))
-                    response = self.client.get(url)
-                    self.assertEqual(response.status_code, status)
+                    self.assertEqual(
+                        self.client.get(reverse(
+                            name, args=(self.note.slug,)
+                        )).status_code,
+                        status
+                    )
 
     def test_redirect_for_anonymous_client(self):
-        login_url = reverse('users:login')
         for name, args in (
                 ('notes:add', None),
                 ('notes:list', None),
@@ -56,7 +58,7 @@ class TestRoutes(TestCase):
                 ('notes:delete', (self.note.slug,)),
         ):
             with self.subTest(name=name):
-                url = reverse(name, args=args)
-                response = self.client.get(url)
-                redirect_url = f'{login_url}?next={url}'
-                self.assertRedirects(response, redirect_url)
+                self.assertRedirects(
+                    self.client.get(reverse(name, args=args)),
+                    f'{reverse("users:login")}?next={reverse(name, args=args)}'
+                )

@@ -1,7 +1,10 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
 
 from pytils.translit import slugify
+
+User = get_user_model()
 
 
 class Note(models.Model):
@@ -36,4 +39,3 @@ class Note(models.Model):
             max_slug_length = self._meta.get_field('slug').max_length
             self.slug = slugify(self.title)[:max_slug_length]
         super().save(*args, **kwargs)
-

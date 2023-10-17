@@ -1,13 +1,9 @@
-# При попытке перейти на страницы списка заметок, отдельной заметки, редактирования или удаления заметки анонимный пользователь перенаправляется на страницу авторизации.
 from http import HTTPStatus
 
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from notes.models import Note
-
-User = get_user_model()
+from notes.models import Note, User
 
 
 class TestRoutes(TestCase):
@@ -16,7 +12,7 @@ class TestRoutes(TestCase):
         cls.author = User.objects.create(username='IceFrog')
         cls.reader = User.objects.create(username='IamGroot')
         cls.note = Note.objects.create(
-            title='mytitle',
+            title='title',
             text='text',
             author=cls.author,
         )
@@ -24,14 +20,19 @@ class TestRoutes(TestCase):
     def test_pages_availability(self):
         for name in (
                 'notes:home',
+                'notes:list',
                 'users:login',
                 'users:logout',
                 'users:signup',
         ):
             with self.subTest(name=name):
+                if name == 'notes:list':
+                    self.client.force_login(self.author)
                 url = reverse(name)
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
+                if name == 'notes:list':
+                    self.client.logout()
 
     def test_availability_for_detail_edit_and_delete(self):
         users_statuses = (
@@ -41,9 +42,9 @@ class TestRoutes(TestCase):
         for user, status in users_statuses:
             self.client.force_login(user)
             for name in (
-                'notes:detail',
-                'notes:edit',
-                'notes:delete',
+                    'notes:detail',
+                    'notes:edit',
+                    'notes:delete',
             ):
                 with self.subTest(user=user, name=name):
                     url = reverse(name, args=(self.note.slug,))
@@ -52,13 +53,14 @@ class TestRoutes(TestCase):
 
     def test_redirect_for_anonymous_client(self):
         login_url = reverse('users:login')
-        for name in (
-            'notes:detail',
-            'notes:edit',
-            'notes:delete',
+        for name, args in (
+                ('notes:list', None),
+                ('notes:detail', (self.note.slug,)),
+                ('notes:edit', (self.note.slug,)),
+                ('notes:delete', (self.note.slug,)),
         ):
             with self.subTest(name=name):
-                url = reverse(name, args=(self.note.slug,))
+                url = reverse(name, args=args)
                 response = self.client.get(url)
                 redirect_url = f'{login_url}?next={url}'
                 self.assertRedirects(response, redirect_url)

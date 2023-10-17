@@ -20,19 +20,14 @@ class TestRoutes(TestCase):
     def test_pages_availability(self):
         for name in (
                 'notes:home',
-                'notes:list',
                 'users:login',
                 'users:logout',
                 'users:signup',
         ):
             with self.subTest(name=name):
-                if name == 'notes:list':
-                    self.client.force_login(self.author)
                 url = reverse(name)
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
-                if name == 'notes:list':
-                    self.client.logout()
 
     def test_availability_for_detail_edit_and_delete(self):
         users_statuses = (
@@ -54,6 +49,7 @@ class TestRoutes(TestCase):
     def test_redirect_for_anonymous_client(self):
         login_url = reverse('users:login')
         for name, args in (
+                ('notes:add', None),
                 ('notes:list', None),
                 ('notes:detail', (self.note.slug,)),
                 ('notes:edit', (self.note.slug,)),

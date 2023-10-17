@@ -22,5 +22,5 @@ class TestContent(TestCase):
         self.client.force_login(self.author)
         self.assertEqual(
             len(self.client.get(reverse('notes:list')).context['object_list']),
-            Note.objects.filter(author=self.author).count()
+            Note.objects.count()
         )

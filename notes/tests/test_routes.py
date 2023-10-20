@@ -29,6 +29,18 @@ class TestRoutes(TestCase):
                     self.client.get(reverse(name)).status_code, HTTPStatus.OK
                 )
 
+    def test_availability_for_list_add_done(self):
+        self.client.force_login(self.author)
+        for name in (
+            'notes:list',
+            'notes:add',
+            'notes:success',
+        ):
+            with self.subTest(name=name):
+                self.assertEqual(
+                    self.client.get(reverse(name)).status_code, HTTPStatus.OK
+                )
+
     def test_availability_for_detail_edit_and_delete(self):
         users_statuses = (
             (self.author, HTTPStatus.OK),
@@ -53,6 +65,7 @@ class TestRoutes(TestCase):
         for name, args in (
                 ('notes:add', None),
                 ('notes:list', None),
+                ('notes:success', None),
                 ('notes:detail', (self.note.slug,)),
                 ('notes:edit', (self.note.slug,)),
                 ('notes:delete', (self.note.slug,)),

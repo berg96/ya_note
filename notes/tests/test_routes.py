@@ -29,7 +29,7 @@ class TestRoutes(TestCase):
                     self.client.get(reverse(name)).status_code, HTTPStatus.OK
                 )
 
-    def test_availability_for_list_add_done(self):
+    def test_pages_availability_for_auth_user(self):
         self.client.force_login(self.author)
         for name in (
             'notes:list',

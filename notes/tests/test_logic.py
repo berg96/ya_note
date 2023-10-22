@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from django.test import Client, TestCase
 from django.urls import reverse
+from pytils.translit import slugify
 
 from notes.forms import WARNING
 from notes.models import Note, User
@@ -25,6 +26,10 @@ class TestNoteCreation(TestCase):
 
     def test_anonymous_user_cant_create_note(self):
         self.client.post(reverse('notes:add'), data=self.form_data)
+        self.assertRedirects(
+            self.client.post(reverse('notes:add'), data=self.form_data),
+            f'{reverse("users:login")}?next={reverse("notes:add")}'
+        )
         self.assertEqual(Note.objects.count(), 0)
 
     def test_user_can_create_note(self):
@@ -86,6 +91,18 @@ class TestNoteEditDeleteUseNotUniqueSlug(TestCase):
             errors=self.NOTE_SLUG + WARNING
         )
         self.assertEqual(Note.objects.count(), 1)
+
+    def test_empty_slug(self):
+        url = reverse('notes:add')
+        response = self.author_client.post(url, data={
+            'title': self.NEW_NOTE_TITLE,
+            'text': self.NEW_NOTE_TEXT,
+        })
+        self.assertRedirects(response, self.success_url)
+        self.assertEqual(Note.objects.count(), 2)
+        note = Note.objects.get(slug=slugify(self.NEW_NOTE_TITLE))
+        expected_slug = slugify(self.NEW_NOTE_TITLE)
+        self.assertEqual(note.slug, expected_slug)
 
     def test_author_can_delete_note(self):
         self.assertRedirects(
